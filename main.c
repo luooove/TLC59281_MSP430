@@ -91,7 +91,7 @@ void Write_bit_LED1(char Status)
 
 void updata1()
 {
-	volatile int j;
+	volatile int j=0;
 	P8OUT |= BLANK;
 	for(j = 95; j>=0;j--)
 		Write_bit_LED1(GS[j]);
@@ -103,7 +103,7 @@ void shift_LED1()
 {
 	updata1();
 	delay();
-	volatile int temp;
+	volatile int temp=0;
 	if(cnt < 95)
 	{
 		temp = GS[cnt+1];
