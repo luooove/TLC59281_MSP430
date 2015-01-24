@@ -17,12 +17,12 @@ Description:
 #define SCLK2 BIT2;
 #define XLAT2 BIT3;
 
-#define SIN BIT5;    //P8.5
-#define BLANK BIT6;  //P8.6
-#define SCLK BIT4;	 //P8.4
-#define XLAT BIT7;   //P9.7
+#define BLANK BIT4;  //P8.4         Serial data input for driver on/off control.
+#define SIN BIT5;    //P8.5         Blank, all outputs. When BLANK = high level, all constant-current outputs (OUT0–OUT15) are forced off
+#define SCLK BIT6;	 //P8.6         Serial data shift clock.
+#define XLAT BIT7;   //P8.7         Edge triggered latch.
 
-volatile int cnt=0; //counter for shift
+volatile unsigned int cnt=0; //counter for shift
 
 
 volatile char GS[96] = {
@@ -72,8 +72,9 @@ volatile char GS2[96] = {
 void delay()
 {
 	volatile unsigned int i;
-	for(i=0;i<10000;i++)
-		;
+	i = 20000;
+	do i--;
+		while(i != 0);
 }
 
 void Write_bit_LED1(char Status)
@@ -87,23 +88,27 @@ void Write_bit_LED1(char Status)
 	{
 		P8OUT &= ~SIN;
 	}
+	P8OUT |= SCLK;
+	P8OUT &= ~SCLK;
 }
 
 void updata1()
 {
 	volatile int j=0;
+	P8OUT |= XLAT;
+	P8OUT &= ~XLAT;
 	P8OUT |= BLANK;
 	for(j = 95; j>=0;j--)
 		Write_bit_LED1(GS[j]);
-	P9OUT |= XLAT;
-	P9OUT &= ~XLAT;
 	P8OUT &= ~BLANK;
+	P8OUT |= XLAT;
+	P8OUT &= ~XLAT;
 }
 void shift_LED1()
 {
 	updata1();
 	delay();
-	volatile int temp=0;
+	volatile unsigned char temp=0;
 	if(cnt < 95)
 	{
 		temp = GS[cnt+1];
@@ -121,8 +126,16 @@ void shift_LED1()
 
 }
 
+
+void Init_Clk(void)
+{
+  WDTCTL = WDTPW + WDTHOLD;  //关闭看门狗
+
+}
+
 void main(void) {
-	WDTCTL = WDTPW | WDTHOLD;		// Stop watchdog timer
+	//WDTCTL = WDTPW | WDTHOLD;		// Stop watchdog timer
+	Init_Clk();
 	P8DIR = 0xFF;
 	P8OUT = 0x00;
 	P9DIR = 0xFF;
